@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Friends list</title>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+    <script src="JS/util.js"></script>
+    <script src="JS/global_vars.js"></script>
+    <script src="JS/URI_scipts.js"></script>
+    <script src="JS/vk_api.js"></script>
+    <link rel="stylesheet" type="text/css" href="CSS/button.css">
+    <link rel="stylesheet" type="text/css" href="CSS/main.css">
+    <link rel="stylesheet" type="text/css" href="CSS/list.css">
+</head>
+<body>
+<div class="header" id="title-text">
+    <div class="header-right">
+        <button class="button-submit" id="logout-btn" type="button">Log out</button>
+    </div>
+</div>
+<div class="content">
+    <div>
+        <div class="list" id="friend-list">
+        </div>
+    </div>
+</div>
+
+</body>
+<script>
+
+    const access_token = getCookie(ACCESS_TOKEN_KEY);
+    if (!access_token)
+        logout();
+
+    function showFriends() {
+        account_get_profile(access_token, function (data) {
+            let name = data[0].first_name;
+
+            let txtEl = document.createElement('p');
+            txtEl.textContent = 'Hello, ' + name + '! It\'s your friends list';
+
+            $('#title-text').append(txtEl);
+        });
+
+        friends_get(access_token, 5, function (data) {
+            let div = $('#friend-list');
+            const count = data.count;
+            let users = data.items;
+            const listedCount = users.length;
+
+            let countEl = document.createElement('p');
+            countEl.textContent = listedCount + '/' + count + ' friends';
+
+            let list = document.createElement('ol');
+            list.setAttribute('class', 'list-rounded');
+            users.forEach(function (user) {
+                let el = document.createElement('li');
+                let span = document.createElement('span');
+                span.textContent = user.first_name + ' ' + user.last_name;
+                el.append(span);
+                list.append(el);
+            });
+            div.append(countEl);
+            div.append(list);
+        });
+    }
+
+    $('#logout-btn').click(function () {
+        logout();
+    });
+
+    $(document).ready(function () {
+        showFriends();
+    });
+
+    function logout() {
+        deleteCookie(ACCESS_TOKEN_KEY);
+        redirect(INDEX_URL);
+    }
+</script>
+</html>

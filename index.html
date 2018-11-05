@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <!--delete before release-->
+    <!--<meta http-equiv='cache-control' content='no-cache'>-->
+    <!--<meta http-equiv='expires' content='0'>-->
+    <!--<meta http-equiv='pragma' content='no-cache'>-->
+
+    <meta charset="UTF-8">
+    <title>OAuth2.0</title>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+    <script src="JS/URI_scipts.js"></script>
+    <script src="JS/util.js"></script>
+    <script src="JS/global_vars.js"></script>
+    <script src="JS/vk_api.js"></script>
+    <link type="text/css" rel="stylesheet" href="CSS/button.css">
+    <link type="text/css" rel="stylesheet" href="CSS/main.css">
+
+</head>
+<body>
+<div class="content login-btn-div">
+    <form class="content" id="form-logvk" action="">
+     <button class="button-submit" type="submit"><span>Log as VK</span></button>
+    </form>
+    <div id="title-text"></div>
+    <div id="friend-list"></div>
+    <div id="show-all-friends-btn"></div>
+</div>
+</body>
+
+<script type="application/javascript">
+    const logForm = $('#form-logvk');
+
+    let access_token;
+
+    function vk_oauth_form_build() {
+        const args = {
+            'client_id': CLIENT_ID,
+            'redirect_uri': REDIRECT_URI,
+            'display': 'page',
+            'scope': 'friends',
+            'response_type': 'token',
+            'v': VK_API_VERSION,
+            'revoke': '0'
+        };
+
+        logForm.attr("action", VK_AUTH_URI);
+        form_insert_args(logForm, args);
+    }
+
+    function friend_list_build(access_token) {
+
+        let count = 5;
+
+        //remove login button
+        logForm.remove();
+
+        //get profile
+        account_get_profile(access_token, function (data) {
+            const name = data[0].first_name;
+
+            let text = document.createElement('p');
+            text.textContent = 'Здравсвтуй, ' + name + '!';
+            $('#title-text').append(text);
+        });
+
+        //get friend's list
+        friends_get(access_token, 5, function (data) {
+            let users = data.items;
+            let count = data.count;
+
+            let text = document.createElement('p');
+            text.textContent = 'Тут ' + users.length + '/' + count + ' твоих друзей';
+
+            let list = document.createElement('ul');
+            users.forEach(function (user) {
+                let e = document.createElement('li');
+                e.textContent = user.first_name + ' ' + user.last_name;
+                list.append(e);
+            });
+
+            let friendDiv = $('#friend-list');
+            friendDiv.append(text);
+            friendDiv.append(list);
+        });
+
+        //show all btn
+        let showAllForm = document.createElement('form');
+        showAllForm.setAttribute('action', FRIENDS_URL);
+        let showAllBtn = document.createElement('button');
+        showAllBtn.setAttribute('type', 'submit');
+        showAllBtn.textContent = 'Show all friends';
+        showAllForm.append(showAllBtn);
+        $('#show-all-friends-btn').append(showAllForm);
+    }
+
+    function access_token_refresh() {
+        let refresh_token = getCookie()
+    }
+
+    $(document).ready(function () {
+        access_token = getCookie(ACCESS_TOKEN_KEY);
+
+        //if token in cache
+        //show friends
+        if (access_token) {
+            redirect(FRIENDS_URL);
+        }
+        //if token doesn't exists in cookies
+        else {
+            const params = uri_get_params(window.location.href);
+
+            //But uri params have the token
+            if (params.hasOwnProperty(ACCESS_TOKEN_KEY)) {
+                access_token = params[ACCESS_TOKEN_KEY];
+
+                //add it to cookies
+                if (params.hasOwnProperty(EXPIRES_KEY_VK)) {
+                    let expires = params[EXPIRES_KEY_VK];
+                    expires = Number(expires);
+                    if (expires)
+                        setTempCookie(ACCESS_TOKEN_KEY, access_token, expires);
+                }
+                else
+                    setCookie(ACCESS_TOKEN_KEY, access_token);
+
+                //show several friends on this page
+                // friend_list_build(access_token);
+                redirect(FRIENDS_URL);
+            }
+            //uri doesn't have token
+            //build form for request
+            else {
+                vk_oauth_form_build();
+            }
+        }
+    });
+</script>
+
+</html>

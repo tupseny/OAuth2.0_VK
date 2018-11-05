@@ -1,0 +1,36 @@
+body {
+    background-color: #45668e;
+}
+
+.content {
+    width: 50%;
+    margin: auto;
+    text-align: center;
+    padding: 20px 10px;
+}
+
+.login-btn-div {
+    padding-top: 24px;
+}
+
+.header {
+    overflow: hidden;
+    background-color: #36456c;
+    padding: 4px 10px;
+}
+
+.header p{
+    float: left;
+    color: #b3c2ff;
+    text-align: center;
+    padding: 4px 12px;
+    text-decoration: none;
+    font-size: 25px;
+    font-weight: bold;
+    border-radius: 4px;
+}
+
+.header-right {
+    float: right;
+    padding: 20px 4px;
+}
